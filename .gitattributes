@@ -1,2 +1,6 @@
 third_party/* -text -whitespace
 assets/sounds/LICENSE-*.txt -text -whitespace
+
+.publish-policy.json text eol=lf
+.githooks/* text eol=lf
+scripts/check-public.mjs text eol=lf
