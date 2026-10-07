@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>地铁跑酷 3D 基础版</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link rel="stylesheet" href="styles/game.css">
+</head>
+<body>
+  <!-- Three.js 会把 WebGL canvas 挂载到这里。 -->
+  <main id="gameRoot" aria-label="3D 跑酷游戏画布"></main>
+  <button id="portalReturn" class="portal-return" type="button" hidden>← 返回首页</button>
+
+  <!-- 顶部计时牌，最小单位 0.1 秒。 -->
+  <section class="timer-board" aria-live="polite">
+    <span class="metric-label">TIME</span>
+    <strong id="timerValue" class="timer-display">00:00.0</strong>
+  </section>
+
+  <!-- 当前速度等级，基础速度是 LV 1，每次提速 +1。 -->
+  <section class="level-board" aria-live="polite">
+    <span class="metric-label">LV</span>
+    <strong id="levelValue" class="level-display">1</strong>
+  </section>
+
+  <!-- 提速时显示的短提示。 -->
+  <div id="speedBanner" class="speed-banner" role="status" aria-live="assertive">SPEED UP +20%</div>
+
+  <!-- 左上角实时得分。 -->
+  <section class="hud hud-left" aria-live="polite">
+    <div>
+      <span class="metric-label">Score</span>
+      <strong id="scoreValue" class="metric-value">0</strong>
+    </div>
+  </section>
+
+  <!-- 右上角金币数，钻石按 10 个金币计入。 -->
+  <section class="hud hud-right" aria-live="polite">
+    <span class="coin-dot" aria-hidden="true" data-asset-file="assets/ui-coin.svg"></span>
+    <div>
+      <span class="metric-label">Coins</span>
+      <strong id="coinValue" class="metric-value">0</strong>
+    </div>
+  </section>
+
+  <!-- 初始开始界面。 -->
+  <section id="startOverlay" class="overlay">
+    <div class="dialog start-dialog">
+      <h1>地铁跑酷 3D</h1>
+      <p>城市轨道已经亮起，下一段冲刺正在等待。</p>
+      <section class="control-guide" aria-label="游戏操作提示">
+        <div class="control-guide-title">游戏操作</div>
+        <div class="control-guide-grid">
+          <div class="control-guide-item">
+            <span class="control-keys"><kbd>A</kbd><kbd>←</kbd></span>
+            <span>向左换道</span>
+          </div>
+          <div class="control-guide-item">
+            <span class="control-keys"><kbd>D</kbd><kbd>→</kbd></span>
+            <span>向右换道</span>
+          </div>
+          <div class="control-guide-item">
+            <span class="control-keys control-keys-wide"><kbd>Space</kbd></span>
+            <span>跳跃</span>
+          </div>
+          <div class="control-guide-item">
+            <span class="control-keys"><kbd>S</kbd><kbd>↓</kbd></span>
+            <span>按住下蹲</span>
+          </div>
+        </div>
+        <div class="touch-guide">触屏设备可使用右下角操作按钮</div>
+      </section>
+      <button id="startBtn" class="command-btn" type="button">开始游戏</button>
+    </div>
+  </section>
+
+  <!-- 游戏结束界面，包含本局统计、用户名输入和金币排行榜。 -->
+  <section id="gameOverOverlay" class="overlay is-hidden">
+    <div class="dialog gameover-dialog">
+      <h1>Game Over</h1>
+      <p id="finalStats">Score 0 · Coins 0</p>
+      <form id="leaderboardForm" class="leaderboard-form">
+        <input id="playerName" class="name-input" type="text" maxlength="16" autocomplete="off" placeholder="输入用户名" aria-label="用户名">
+        <button id="saveScoreBtn" class="command-btn save-score-btn" type="submit">保存成绩</button>
+      </form>
+      <p id="portalStatus" class="portal-status" role="status" hidden></p>
+      <button id="portalRetry" class="portal-retry" type="button" hidden>重试同步成绩</button>
+      <section class="leaderboard-panel" aria-label="金币排行榜">
+        <div class="leaderboard-title">金币排行榜</div>
+        <div class="leaderboard-head"><span>名次</span><span>玩家</span><span>成绩</span><span>日期</span></div>
+        <ol id="leaderboardList" class="leaderboard-list"></ol>
+      </section>
+      <button id="restartBtn" class="command-btn restart-btn" type="button" data-asset-file="assets/ui-restart.svg">再玩一次</button>
+    </div>
+  </section>
+
+  <!-- 触屏设备备用操作按钮。 -->
+  <nav class="touch-controls" aria-label="触控操作">
+    <button class="touch-btn" type="button" data-action="jump" aria-label="跳跃">↑</button>
+    <button class="touch-btn" type="button" data-action="left" aria-label="左移">←</button>
+    <button class="touch-btn" type="button" data-action="slide" aria-label="滑行">↓</button>
+    <button class="touch-btn" type="button" data-action="right" aria-label="右移">→</button>
+  </nav>
+
+  <script src="js/config.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/leaderboard.js"></script>
+  <script src="js/gamehub.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>

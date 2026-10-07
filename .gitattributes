@@ -1,0 +1,2 @@
+third_party/* -text -whitespace
+assets/sounds/LICENSE-*.txt -text -whitespace

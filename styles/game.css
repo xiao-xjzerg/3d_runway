@@ -1,0 +1,671 @@
+    .portal-return {
+      position: fixed;
+      z-index: 40;
+      left: max(16px, env(safe-area-inset-left));
+      bottom: max(16px, env(safe-area-inset-bottom));
+      min-height: 42px;
+      padding: 8px 14px;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      color: var(--text-main);
+      background: rgba(15, 23, 42, 0.92);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .portal-status {
+      margin: 10px 0;
+      color: var(--text-soft);
+      font-size: 13px;
+    }
+
+    .portal-retry {
+      margin-bottom: 10px;
+      padding: 7px 12px;
+      border: 1px solid var(--action);
+      border-radius: 6px;
+      color: var(--text-main);
+      background: var(--panel-bg);
+      cursor: pointer;
+    }
+
+    .portal-return[hidden], .portal-status[hidden], .portal-retry[hidden] { display: none !important; }
+
+    /* 全局设计变量：集中管理 HUD、面板、文字和状态色。 */
+    :root {
+      color-scheme: dark;
+      --panel-bg: rgba(14, 20, 30, 0.76);
+      --panel-border: rgba(255, 255, 255, 0.16);
+      --text-main: #f8fafc;
+      --text-soft: #cbd5e1;
+      --accent: #facc15;
+      --action: #14b8a6;
+      --danger: #ef4444;
+    }
+
+    /* 统一盒模型，防止 HUD 数字和按钮在不同浏览器里撑破布局。 */
+    * {
+      box-sizing: border-box;
+      letter-spacing: 0;
+    }
+
+    /* 页面本身只承载全屏 3D canvas 和覆盖 UI，不允许滚动。 */
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #101820;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    /* 让所有按钮继承页面字体，保持 UI 风格一致。 */
+    button {
+      font: inherit;
+    }
+
+    /* Three.js 渲染画布固定全屏显示。 */
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* 3D 场景挂载点。 */
+    #gameRoot {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    /* 左右角得分/金币 HUD。 */
+    .hud {
+      position: fixed;
+      z-index: 10;
+      top: 16px;
+      display: flex;
+      min-width: 132px;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      background: var(--panel-bg);
+      padding: 10px 12px;
+      color: var(--text-main);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+      backdrop-filter: blur(10px);
+    }
+
+    .hud-left {
+      left: 16px;
+    }
+
+    .hud-right {
+      right: 16px;
+    }
+
+    /* 顶部体育计时牌，使用等宽/数码字体模拟比赛计时器。 */
+    .timer-board {
+      position: fixed;
+      z-index: 11;
+      top: 14px;
+      left: 50%;
+      width: 188px;
+      transform: translateX(-50%);
+      border: 2px solid rgba(250, 204, 21, 0.86);
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(8, 13, 22, 0.94), rgba(2, 6, 23, 0.9));
+      padding: 8px 12px 9px;
+      color: #facc15;
+      text-align: center;
+      box-shadow: 0 16px 42px rgba(0, 0, 0, 0.32), inset 0 0 18px rgba(250, 204, 21, 0.12);
+      backdrop-filter: blur(8px);
+    }
+
+    .metric-label {
+      display: block;
+      color: var(--text-soft);
+      font-size: 12px;
+      line-height: 1.1;
+    }
+
+    .metric-value {
+      display: block;
+      min-width: 76px;
+      color: var(--text-main);
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .timer-display {
+      display: block;
+      min-width: 150px;
+      font-family: "DS-Digital", "Digital-7", "Segment7", "Courier New", monospace;
+      font-size: 34px;
+      font-weight: 900;
+      line-height: 1;
+      color: #facc15;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 0 10px rgba(250, 204, 21, 0.56), 0 0 22px rgba(249, 115, 22, 0.32);
+    }
+
+    /* 速度等级牌，和计时牌保持相同的体育记分牌质感。 */
+    .level-board {
+      position: fixed;
+      z-index: 11;
+      top: 14px;
+      left: calc(50% + 104px);
+      width: 74px;
+      border: 2px solid rgba(20, 184, 166, 0.82);
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(8, 13, 22, 0.94), rgba(2, 6, 23, 0.9));
+      padding: 8px 8px 9px;
+      color: #5eead4;
+      text-align: center;
+      box-shadow: 0 16px 42px rgba(0, 0, 0, 0.28), inset 0 0 18px rgba(20, 184, 166, 0.12);
+      backdrop-filter: blur(8px);
+    }
+
+    .level-display {
+      display: block;
+      font-family: "DS-Digital", "Digital-7", "Segment7", "Courier New", monospace;
+      font-size: 28px;
+      font-weight: 900;
+      line-height: 1;
+      color: #5eead4;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 0 10px rgba(45, 212, 191, 0.5);
+    }
+
+    .coin-dot {
+      width: 26px;
+      height: 26px;
+      flex: 0 0 auto;
+      border: 4px solid #f59e0b;
+      border-radius: 50%;
+      background: #fde047;
+      box-shadow: inset 0 0 0 4px #facc15;
+    }
+
+    /* 提速提示横幅，仅在每 60 秒速度提升时短暂显示。 */
+    .speed-banner {
+      position: fixed;
+      z-index: 12;
+      top: 82px;
+      left: 50%;
+      min-width: 210px;
+      transform: translate(-50%, -10px) scale(0.96);
+      border: 2px solid rgba(20, 184, 166, 0.82);
+      border-radius: 8px;
+      background: rgba(2, 6, 23, 0.86);
+      padding: 10px 16px;
+      color: #ffffff;
+      font-family: Impact, "Arial Black", sans-serif;
+      font-size: 22px;
+      line-height: 1;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      box-shadow: 0 18px 42px rgba(20, 184, 166, 0.26);
+      transition: opacity 140ms ease, transform 140ms ease;
+    }
+
+    .speed-banner.is-visible {
+      opacity: 1;
+      transform: translate(-50%, 0) scale(1);
+    }
+
+    /* 开始和 Game Over 使用的全屏覆盖层。 */
+    .overlay {
+      position: fixed;
+      z-index: 20;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background:
+        linear-gradient(180deg, rgba(9, 13, 18, 0.36), rgba(9, 13, 18, 0.82));
+      opacity: 1;
+      transition: opacity 180ms ease;
+    }
+
+    .overlay.is-hidden {
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    /* 覆盖层里的主对话框。 */
+    .dialog {
+      width: min(420px, 100%);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.86);
+      padding: 26px;
+      color: var(--text-main);
+      text-align: center;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.36);
+      backdrop-filter: blur(14px);
+    }
+
+    .gameover-dialog {
+      width: min(560px, 100%);
+      max-height: calc(100dvh - 44px);
+      overflow-y: auto;
+    }
+
+    /* 起始页比普通对话框略宽，用于容纳操作提示。 */
+    .start-dialog {
+      width: min(520px, 100%);
+    }
+
+    .dialog h1 {
+      margin: 0 0 10px;
+      color: #f8fafc;
+      font-size: 34px;
+      font-weight: 900;
+      line-height: 1.08;
+    }
+
+    .dialog p {
+      margin: 0 0 20px;
+      color: var(--text-soft);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .command-btn {
+      width: 100%;
+      min-height: 48px;
+      border: 0;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #f97316, #14b8a6);
+      color: #ffffff;
+      cursor: pointer;
+      font-size: 17px;
+      font-weight: 800;
+      box-shadow: 0 14px 32px rgba(20, 184, 166, 0.26);
+      transition: transform 120ms ease, filter 120ms ease;
+    }
+
+    .command-btn:active {
+      transform: translateY(1px) scale(0.99);
+    }
+
+    .command-btn:hover {
+      filter: brightness(1.08);
+    }
+
+    /* 起始页操作提示，使用紧凑行布局方便快速扫描。 */
+    .control-guide {
+      margin: 0 0 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 16px 0;
+      text-align: left;
+    }
+
+    .control-guide-title {
+      margin-bottom: 12px;
+      color: #facc15;
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .control-guide-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px 18px;
+    }
+
+    .control-guide-item {
+      display: grid;
+      grid-template-columns: 86px minmax(0, 1fr);
+      align-items: center;
+      min-height: 34px;
+      color: #e2e8f0;
+      font-size: 14px;
+    }
+
+    .control-keys {
+      display: flex;
+      gap: 5px;
+    }
+
+    .control-keys kbd {
+      display: inline-grid;
+      min-width: 32px;
+      height: 30px;
+      place-items: center;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-bottom-width: 3px;
+      border-radius: 6px;
+      background: rgba(15, 23, 42, 0.82);
+      color: #ffffff;
+      padding: 0 7px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .control-keys-wide kbd {
+      min-width: 68px;
+    }
+
+    .touch-guide {
+      margin-top: 12px;
+      color: #94a3b8;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    /* Game Over 后保存用户名和成绩的表单。 */
+    .leaderboard-form {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      margin: 0 0 18px;
+    }
+
+    .name-input {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.82);
+      color: #ffffff;
+      padding: 0 12px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    .name-input:focus {
+      border-color: #facc15;
+      box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.16);
+    }
+
+    .save-score-btn {
+      width: auto;
+      min-width: 112px;
+      padding: 0 16px;
+    }
+
+    .save-score-btn:disabled,
+    .name-input:disabled {
+      cursor: default;
+      opacity: 0.62;
+    }
+
+    /* 金币排行榜面板，按金币数为主排序。 */
+    .leaderboard-panel {
+      margin: 0 0 18px;
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      border-radius: 8px;
+      background: rgba(2, 6, 23, 0.38);
+      overflow: hidden;
+      text-align: left;
+    }
+
+    .leaderboard-title {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.11);
+      color: #facc15;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .leaderboard-head,
+    .leaderboard-list li {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) minmax(130px, 1.3fr) 88px;
+      gap: 9px;
+      align-items: center;
+    }
+
+    .leaderboard-head {
+      padding: 11px 12px;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.18);
+      color: #cbd5e1;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .leaderboard-head span:nth-child(3) {
+      text-align: center;
+    }
+
+    .leaderboard-head span:nth-child(4) {
+      text-align: right;
+    }
+
+    .leaderboard-list {
+      display: grid;
+      gap: 0;
+      max-height: min(34vh, 300px);
+      margin: 0;
+      padding: 0;
+      overflow: auto;
+      list-style: none;
+    }
+
+    .leaderboard-list li {
+      min-height: 62px;
+      padding: 10px 12px;
+      color: #e2e8f0;
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.4;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .leaderboard-list li:last-child {
+      border-bottom: 0;
+    }
+
+    .leaderboard-list .leaderboard-name {
+      min-width: 0;
+      overflow: hidden;
+      color: #ffffff;
+      font-weight: 800;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .leaderboard-list .leaderboard-rank,
+    .leaderboard-list .leaderboard-date {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .leaderboard-list .leaderboard-result {
+      text-align: center;
+    }
+
+    .leaderboard-list .leaderboard-date {
+      text-align: right;
+    }
+
+    .leaderboard-list .leaderboard-result {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      color: #fde68a;
+      font-size: 14px;
+    }
+
+    .leaderboard-list .leaderboard-date {
+      color: #cbd5e1;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .leaderboard-list .leaderboard-empty {
+      grid-template-columns: 1fr;
+      color: #94a3b8;
+      text-align: center;
+    }
+
+    .restart-btn {
+      background: linear-gradient(135deg, #475569, #0f766e);
+    }
+
+    /* 触屏设备上的方向/动作控制。 */
+    .touch-controls {
+      position: fixed;
+      z-index: 12;
+      right: 16px;
+      bottom: 16px;
+      display: none;
+      grid-template-columns: repeat(3, 56px);
+      grid-template-rows: repeat(2, 56px);
+      gap: 8px;
+    }
+
+    .touch-btn {
+      width: 56px;
+      height: 56px;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.72);
+      color: #ffffff;
+      cursor: pointer;
+      font-size: 26px;
+      font-weight: 800;
+      backdrop-filter: blur(10px);
+    }
+
+    .touch-btn[data-action="jump"] {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .touch-btn[data-action="left"] {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .touch-btn[data-action="slide"] {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    .touch-btn[data-action="right"] {
+      grid-column: 3;
+      grid-row: 2;
+    }
+
+    /* Three.js CDN 加载失败时的降级提示。 */
+    .runtime-error {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: #111827;
+      color: #f8fafc;
+      text-align: center;
+    }
+
+    /* 只有触屏设备显示屏幕按钮。 */
+    @media (pointer: coarse) {
+      .touch-controls {
+        display: grid;
+      }
+    }
+
+    /* 小屏幕重新排布顶部 HUD，避免计时、等级和分数重叠。 */
+    @media (max-width: 560px) {
+      .hud {
+        top: 84px;
+        min-width: 112px;
+        padding: 8px 10px;
+      }
+
+      .timer-board {
+        top: 10px;
+        width: 172px;
+        padding: 7px 10px 8px;
+      }
+
+      .timer-display {
+        min-width: 136px;
+        font-size: 30px;
+      }
+
+      .level-board {
+        top: 10px;
+        left: calc(50% + 96px);
+        width: 68px;
+        padding: 7px 7px 8px;
+      }
+
+      .level-display {
+        font-size: 25px;
+      }
+
+      .speed-banner {
+        top: 144px;
+        min-width: 186px;
+        font-size: 19px;
+      }
+
+      .hud-left {
+        left: 10px;
+      }
+
+      .hud-right {
+        right: 10px;
+      }
+
+      .metric-value {
+        min-width: 58px;
+        font-size: 20px;
+      }
+
+      .dialog {
+        padding: 22px;
+      }
+
+      .dialog h1 {
+        font-size: 28px;
+      }
+
+      .control-guide-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .control-guide-item {
+        grid-template-columns: 94px minmax(0, 1fr);
+      }
+
+      .leaderboard-form {
+        grid-template-columns: 1fr;
+      }
+
+      .save-score-btn {
+        width: 100%;
+      }
+
+      .leaderboard-list li {
+        grid-template-columns: 27px minmax(0, 1fr) minmax(84px, 1.1fr) 76px;
+        gap: 5px;
+        padding: 10px;
+        font-size: 13px;
+      }
+
+      .leaderboard-head {
+        grid-template-columns: 27px minmax(0, 1fr) minmax(84px, 1.1fr) 76px;
+        gap: 5px;
+        padding: 9px 10px;
+        font-size: 11px;
+      }
+
+      .leaderboard-list .leaderboard-result {
+        font-size: 12px;
+      }
+
+      .leaderboard-list .leaderboard-date {
+        font-size: 11px;
+      }
+    }

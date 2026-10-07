@@ -1,0 +1,10 @@
+# Downloaded source archives and extracted audio packs are not used at runtime.
+assets/sounds/_packs/
+assets/sounds/*.zip
+*prompt*.md
+tests/
+tmp/
+agent.md
+PLAN.md
+DEMO.html
+2D_version/
