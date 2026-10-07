@@ -17,15 +17,3 @@ python -m http.server 4173 --bind 127.0.0.1
 A/D 或左右方向键切换跑道，Space 跳跃，S 或向下方向键下蹲；手机可使用页面触控按钮。
 
 排行榜主要指标：金币优先，其次分数与用时。独立运行时，记录保存在当前浏览器的 localStorage，清除站点数据会清除本机记录。
-
-## 源码维护
-
-本仓库使用 `.publish-policy.json` 定义可提交文件，`.gitignore` 排除其他本地资料。新增源码或资源目录时同时更新这两个文件；数据库、凭据、设计源表、提示词和测试资料不提交。第三方原始许可随相关依赖保留。
-
-克隆后使用 Node.js **26.10.0** 安装本仓库的提交与推送检查：
-
-```powershell
-node scripts/check-public.mjs install
-```
-
-修改完成后执行 `git add`，再运行 `node scripts/check-public.mjs staged`，确认通过后提交并推送 `main`。检查会审阅待提交文件以及待推送提交，拦截白名单外文件、数据库和常见凭据。Git 钩子仅对当前仓库生效，每次新克隆后需重新安装。
